@@ -4,6 +4,7 @@ import PauseIcon from './icons/pause'
 import PlayIcon from './icons/play'
 import { theme } from '@/constanst/theme'
 import TrackPlayer from 'react-native-track-player'
+import { styles } from './styles'
 
 type ButtonPlayerProps = {
  style?: StyleProp<ViewStyle>
@@ -21,7 +22,7 @@ export const ButtonPlayer = ({ style, color }: ButtonPlayerProps) => {
   }
  }
  return (
-  <Pressable style={style} onPress={handlePlay}>
+  <Pressable style={[styles.controlsButton, style]} onPress={handlePlay}>
    {isPlaying.playing ? (
     <PauseIcon width={28} height={28} fill={color ?? theme.colors.secondary} />
    ) : (
