@@ -73,7 +73,6 @@ const styles = StyleSheet.create({
   position: 'relative',
   paddingVertical: 10,
   flexDirection: 'column',
-  backgroundColor: '#fff1',
   alignItems: 'center',
  },
  playButton: {
