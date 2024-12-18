@@ -1,13 +1,15 @@
-import PlayIcon from '@/components/icons/play'
-import PlayerSkipBack from '@/components/icons/player-skip-back'
-import PlayerSkipForward from '@/components/icons/player-skip-forward'
+import { ButtonHeart } from '@/components/button-heart'
+import { ButtonPlayer } from '@/components/button-player'
+import { ButtonPlayerBack } from '@/components/button-player-back'
+import { ButtonPlayerForward } from '@/components/button-player-forward'
+import { ButtonRepeatMode } from '@/components/button-repeat-mode'
+import { SliderUI } from '@/components/slider'
 import { TextUI } from '@/components/text-ui'
 import { theme } from '@/constanst/theme'
 import { Image } from 'expo-image'
 import { router } from 'expo-router'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
-import { GestureHandlerRootView } from 'react-native-gesture-handler'
-import { useActiveTrack } from 'react-native-track-player'
+import { useActiveTrack, useIsPlaying } from 'react-native-track-player'
 
 export default function PlayerScreen() {
  const song = useActiveTrack()
@@ -17,7 +19,7 @@ export default function PlayerScreen() {
  }
 
  return (
-  <GestureHandlerRootView style={styles.container}>
+  <View style={styles.container}>
    <Pressable onPress={handleClose} style={styles.close} />
    <View style={styles.imageContainer}>
     <Image
@@ -33,26 +35,21 @@ export default function PlayerScreen() {
     </TextUI>
     <TextUI style={{ fontSize: 16 }}>{song?.artist}</TextUI>
    </View>
-
+   <SliderUI />
    <View
     style={{
      flexDirection: 'row',
      gap: 20,
-     marginTop: 40,
      alignItems: 'center',
     }}
    >
-    <Pressable style={styles.controlsSmall}>
-     <PlayerSkipBack width={24} height={24} fill={theme.colors.primary} />
-    </Pressable>
-    <Pressable style={styles.controlsButton}>
-     <PlayIcon width={24} height={24} fill={theme.colors.primary} />
-    </Pressable>
-    <Pressable style={styles.controlsSmall}>
-     <PlayerSkipForward width={24} height={24} fill={theme.colors.primary} />
-    </Pressable>
+    <ButtonHeart />
+    <ButtonPlayerBack />
+    <ButtonPlayer style={{ width: 60, height: 60 }} />
+    <ButtonPlayerForward />
+    <ButtonRepeatMode />
    </View>
-  </GestureHandlerRootView>
+  </View>
  )
 }
 
@@ -74,26 +71,11 @@ const styles = StyleSheet.create({
  info: {
   marginTop: 20,
   gap: 5,
+  width: '90%',
  },
  controls: {
   flexDirection: 'row',
   gap: 20,
- },
- controlsButton: {
-  width: 60,
-  height: 60,
-  backgroundColor: '#fff',
-  borderRadius: 100,
-  justifyContent: 'center',
-  alignItems: 'center',
- },
- controlsSmall: {
-  width: 45,
-  height: 45,
-  backgroundColor: '#fff',
-  borderRadius: 100,
-  justifyContent: 'center',
-  alignItems: 'center',
  },
  imageContainer: {
   width: 250,
