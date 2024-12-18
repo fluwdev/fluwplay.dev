@@ -1,5 +1,5 @@
 import * as MediaLibrary from 'expo-media-library'
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useRef } from 'react'
 import { Song } from '../types/types'
 
 const PAGINATION_LIMIT = 20
@@ -10,6 +10,7 @@ export const useSongsSystem = () => {
  const [hasNextPage, setHasNextPage] = useState(true)
  const [currentPage, setCurrentPage] = useState(0)
  const [isLoading, setIsLoading] = useState(false)
+ const loadingRef = useRef(false)
 
  const handleRequestPermission = async () => {
   const response = await requestPermission()
@@ -32,9 +33,11 @@ export const useSongsSystem = () => {
 
  const loadSongs = async (resetPagination = false) => {
   try {
-   if (!permission?.granted) return
+   if (!permission?.granted || loadingRef.current) return
 
+   loadingRef.current = true
    setIsLoading(true)
+
    const pageToLoad = resetPagination ? 0 : currentPage
 
    const media = await MediaLibrary.getAssetsAsync({
@@ -44,20 +47,23 @@ export const useSongsSystem = () => {
     sortBy: [MediaLibrary.SortBy.creationTime],
    })
 
-   // Obtener metadatos adicionales para cada asset
-   const assetsWithMetadata = await Promise.all(
-    media.assets.map(async (asset) => {
-     const assetInfo = await MediaLibrary.getAssetInfoAsync(asset)
-     return { ...asset, ...assetInfo }
+   const batchSize = 5
+   const newSongs: Song[] = []
+
+   for (let i = 0; i < media.assets.length; i += batchSize) {
+    const batch = media.assets.slice(i, i + batchSize)
+    const batchWithMetadata = await Promise.all(
+     batch.map(async (asset) => {
+      const assetInfo = await MediaLibrary.getAssetInfoAsync(asset)
+      return mapSongData({ ...asset, ...assetInfo })
+     })
+    )
+    newSongs.push(...batchWithMetadata)
+
+    setSongs((prevSongs) => {
+     if (resetPagination) return newSongs
+     return [...prevSongs, ...batchWithMetadata]
     })
-   )
-
-   const mappedSongs = assetsWithMetadata.map(mapSongData)
-
-   if (resetPagination) {
-    setSongs(mappedSongs)
-   } else {
-    setSongs((prevSongs) => [...prevSongs, ...mappedSongs])
    }
 
    setHasNextPage(media.hasNextPage)
@@ -66,17 +72,20 @@ export const useSongsSystem = () => {
    console.error('Error loading songs:', error)
   } finally {
    setIsLoading(false)
+   loadingRef.current = false
   }
  }
 
  const loadMoreSongs = useCallback(() => {
-  if (!isLoading && hasNextPage) {
+  if (!isLoading && hasNextPage && !loadingRef.current) {
    loadSongs()
   }
  }, [isLoading, hasNextPage])
 
  const refreshSongs = useCallback(() => {
-  loadSongs(true)
+  if (!loadingRef.current) {
+   loadSongs(true)
+  }
  }, [])
 
  return {
