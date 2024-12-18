@@ -6,6 +6,7 @@ import { ButtonPlayer } from './button-player'
 import { ButtonPlayerBack } from './button-player-back'
 import { ButtonPlayerForward } from './button-player-forward'
 import { router } from 'expo-router'
+import { SliderUI } from './slider'
 
 export const FloatingPlayer = () => {
  const song = useActiveTrack()
@@ -31,9 +32,13 @@ export const FloatingPlayer = () => {
     <TextUI style={styles.text}>{song?.artist}</TextUI>
    </View>
    <View style={styles.controls}>
-    <ButtonPlayerBack />
-    <ButtonPlayer />
-    <ButtonPlayerForward />
+    <ButtonPlayerBack
+     style={{ backgroundColor: 'transparent', borderWidth: 0 }}
+    />
+    <ButtonPlayer style={{ borderWidth: 0, backgroundColor: 'transparent' }} />
+    <ButtonPlayerForward
+     style={{ backgroundColor: 'transparent', borderWidth: 0 }}
+    />
    </View>
   </Pressable>
  )
@@ -48,13 +53,15 @@ const styles = StyleSheet.create({
   flexDirection: 'row',
   zIndex: 200,
   paddingHorizontal: 10,
-  backgroundColor: '#112122',
+  borderWidth: 1,
+  borderColor: '#fff2',
   width: '95%',
   borderRadius: 20,
   height: 70,
  },
  info: {
   height: '100%',
+  flex: 1,
   zIndex: 100,
   marginLeft: 10,
   gap: 5,
@@ -71,7 +78,6 @@ const styles = StyleSheet.create({
  },
  controls: {
   height: '80%',
-  gap: 10,
   flex: 1,
   flexDirection: 'row',
   alignItems: 'center',
