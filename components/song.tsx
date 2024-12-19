@@ -7,14 +7,29 @@ import { theme } from '@/constanst/theme'
 import TrackPlayer, {
  useActiveTrack,
  useIsPlaying,
- isPlaying,
 } from 'react-native-track-player'
 import PauseIcon from './icons/pause'
+import { LinearGradient } from 'expo-linear-gradient'
+import { useMemo } from 'react'
 
 type SongCardProps = {
  song: Song
  onTrackPress: (track: Song) => void
 }
+
+const gradientList = [
+ ['#8442f5', '#42f5bf'],
+ ['#2f2', '#2bb'],
+ ['#9b42f5', '#d142f5'],
+ ['#f542b3', '#428af5'],
+]
+
+const positionGradient = [
+ { x: 0, y: 0 },
+ { x: 1, y: 0.2 },
+ { x: 0, y: 0.4 },
+ { x: 0, y: 0 },
+]
 
 export const SongCard = ({
  song,
@@ -22,6 +37,20 @@ export const SongCard = ({
 }: SongCardProps) => {
  const isPlayingSong = useActiveTrack()?.url === song.url
  const isPlaying = useIsPlaying()
+
+ const randomGradient = useMemo(
+  () => gradientList[Math.floor(Math.random() * gradientList.length)],
+  []
+ )
+ const randomPositionStart = useMemo(
+  () => positionGradient[Math.floor(Math.random() * positionGradient.length)],
+  []
+ )
+ const randomPositionEnd = useMemo(
+  () => positionGradient[Math.floor(Math.random() * positionGradient.length)],
+  []
+ )
+
  return (
   <Pressable
    onPress={() => {
@@ -30,17 +59,32 @@ export const SongCard = ({
    }}
    style={styles.containerSong}
   >
-   <Image
+   <LinearGradient
+    start={randomPositionStart}
+    end={randomPositionEnd}
+    colors={randomGradient}
+    style={{
+     borderWidth: 1,
+     borderColor: '#fff2',
+     backgroundColor: '#1111',
+     width: 50,
+     height: 50,
+     borderRadius: 10,
+    }}
+   />
+   {/* <Image
     source={{
      uri: song.artwork ?? '',
     }}
     style={{
-     backgroundColor: '#42f',
-     width: 100,
-     height: 100,
+     borderWidth: 1,
+     borderColor: '#fff2',
+     backgroundColor: '#1111',
+     width: 50,
+     height: 50,
      borderRadius: 10,
     }}
-   />
+   /> */}
    {isPlayingSong && (
     <Pressable style={styles.playButton}>
      {isPlaying.playing && (
@@ -51,11 +95,13 @@ export const SongCard = ({
      )}
     </Pressable>
    )}
-   <View style={{ gap: 5 }}>
-    <TextUI fontFamily='Geist-SemiBold'>
-     {song.title.slice(0, 15).concat('...')}
+   <View style={{ gap: 5, marginLeft: 10 }}>
+    <TextUI style={{ textAlign: 'left' }} fontFamily='Geist-SemiBold'>
+     {song.title.length > 30
+      ? song.title.slice(0, 30).concat('...')
+      : song.title}
     </TextUI>
-    <TextUI>{song.artist}</TextUI>
+    <TextUI style={{ textAlign: 'left' }}>{song.artist}</TextUI>
    </View>
   </Pressable>
  )
@@ -68,11 +114,12 @@ const styles = StyleSheet.create({
   borderRadius: 10,
   borderWidth: 1,
   borderColor: '#fff2',
-  gap: 15,
+  paddingHorizontal: 10,
+  gap: 5,
   margin: 2,
   position: 'relative',
   paddingVertical: 10,
-  flexDirection: 'column',
+  flexDirection: 'row',
   alignItems: 'center',
  },
  playButton: {
