@@ -15,7 +15,6 @@ export const useSongsSystem = () => {
    }
    return response.granted
   } catch (error) {
-   console.error('Error al solicitar permisos:', error)
    return false
   }
  }
@@ -44,7 +43,6 @@ export const useSongsSystem = () => {
      undefined,
    }
   } catch (error) {
-   console.error('Error procesando metadatos:', error)
    return null
   }
  }
@@ -52,7 +50,6 @@ export const useSongsSystem = () => {
  const loadSongs = async () => {
   try {
    if (!permission?.granted) {
-    console.log('No hay permisos para acceder a la biblioteca')
     return
    }
    setIsLoading(true)
@@ -70,7 +67,6 @@ export const useSongsSystem = () => {
      try {
       return await mapSongData(asset)
      } catch (error) {
-      console.error('Error procesando asset:', error)
       return null
      }
     })
@@ -81,7 +77,7 @@ export const useSongsSystem = () => {
    )
    setSongs(validSongs)
   } catch (error) {
-   console.error('Error cargando canciones:', error)
+   setIsLoading(false)
   } finally {
    setIsLoading(false)
   }
