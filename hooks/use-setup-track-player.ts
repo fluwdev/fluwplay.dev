@@ -1,5 +1,8 @@
 import { useEffect, useRef } from 'react'
-import TrackPlayer, { RepeatMode } from 'react-native-track-player'
+import TrackPlayer, {
+ AppKilledPlaybackBehavior,
+ RepeatMode,
+} from 'react-native-track-player'
 
 const setupTrackPlayer = async () => {
  await TrackPlayer.setupPlayer({
@@ -7,6 +10,11 @@ const setupTrackPlayer = async () => {
  })
  await TrackPlayer.setVolume(0.7)
  await TrackPlayer.setRepeatMode(RepeatMode.Queue)
+ TrackPlayer.updateOptions({
+  android: {
+   appKilledPlaybackBehavior: AppKilledPlaybackBehavior.ContinuePlayback,
+  },
+ })
 }
 
 export const useSetupTrackPlayer = ({ onLoad }: { onLoad: () => void }) => {
