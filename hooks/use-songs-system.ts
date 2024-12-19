@@ -1,98 +1,105 @@
 import * as MediaLibrary from 'expo-media-library'
-import { useCallback, useState, useRef } from 'react'
+import { useCallback, useState, useEffect } from 'react'
 import { Song } from '../types/types'
-
-const PAGINATION_LIMIT = 20
 
 export const useSongsSystem = () => {
  const [permission, requestPermission] = MediaLibrary.usePermissions()
  const [songs, setSongs] = useState<Song[]>([])
- const [hasNextPage, setHasNextPage] = useState(true)
- const [currentPage, setCurrentPage] = useState(0)
  const [isLoading, setIsLoading] = useState(false)
- const loadingRef = useRef(false)
 
  const handleRequestPermission = async () => {
-  const response = await requestPermission()
-  if (response.granted) {
-   await loadSongs()
-  }
-  return response.granted
- }
-
- const mapSongData = (asset: MediaLibrary.Asset): Song => {
-  return {
-   id: asset.id,
-   title: asset.filename.replace(/\.[^/.]+$/, ''),
-   artist: asset.artist || 'Artista desconocido',
-   duration: asset.duration,
-   url: asset.uri,
-   artwork: asset.albumCoverUrl || undefined,
-  }
- }
-
- const loadSongs = async (resetPagination = false) => {
   try {
-   if (!permission?.granted || loadingRef.current) return
+   const response = await requestPermission()
+   if (response.granted) {
+    await loadSongs()
+   }
+   return response.granted
+  } catch (error) {
+   console.error('Error al solicitar permisos:', error)
+   return false
+  }
+ }
 
-   loadingRef.current = true
+ const mapSongData = async (
+  asset: MediaLibrary.Asset
+ ): Promise<Song | null> => {
+  try {
+   const assetInfo = await MediaLibrary.getAssetInfoAsync(asset.id, {
+    shouldDownloadFromNetwork: true,
+   })
+   const fileName =
+    asset.filename.split('.').slice(0, -1).join('.') || asset.filename
+   const title = assetInfo.metadata?.title || fileName
+
+   return {
+    id: asset.id,
+    title: title,
+    artist: assetInfo.metadata?.artist || asset.artist || 'Artista desconocido',
+    duration: asset.duration,
+    url: asset.uri,
+    artwork:
+     assetInfo.metadata?.albumCoverUrl ||
+     asset.albumCoverUrl ||
+     assetInfo.metadata?.albumArt ||
+     undefined,
+   }
+  } catch (error) {
+   console.error('Error procesando metadatos:', error)
+   return null
+  }
+ }
+
+ const loadSongs = async () => {
+  try {
+   if (!permission?.granted) {
+    console.log('No hay permisos para acceder a la biblioteca')
+    return
+   }
    setIsLoading(true)
-
-   const pageToLoad = resetPagination ? 0 : currentPage
-
+   const mediaCount = await MediaLibrary.getAssetsAsync({
+    mediaType: [MediaLibrary.MediaType.audio],
+   })
    const media = await MediaLibrary.getAssetsAsync({
-    mediaType: MediaLibrary.MediaType.audio,
-    first: PAGINATION_LIMIT,
-    offset: pageToLoad * PAGINATION_LIMIT,
-    sortBy: [MediaLibrary.SortBy.creationTime],
+    mediaType: [MediaLibrary.MediaType.audio],
+    first: mediaCount.totalCount,
+    sortBy: ['creationTime'],
    })
 
-   const batchSize = 5
-   const newSongs: Song[] = []
-
-   for (let i = 0; i < media.assets.length; i += batchSize) {
-    const batch = media.assets.slice(i, i + batchSize)
-    const batchWithMetadata = await Promise.all(
-     batch.map(async (asset) => {
-      const assetInfo = await MediaLibrary.getAssetInfoAsync(asset)
-      return mapSongData({ ...asset, ...assetInfo })
-     })
-    )
-    newSongs.push(...batchWithMetadata)
-
-    setSongs((prevSongs) => {
-     if (resetPagination) return newSongs
-     return [...prevSongs, ...batchWithMetadata]
+   const processedSongs = await Promise.all(
+    media.assets.map(async (asset) => {
+     try {
+      return await mapSongData(asset)
+     } catch (error) {
+      console.error('Error procesando asset:', error)
+      return null
+     }
     })
-   }
+   )
 
-   setHasNextPage(media.hasNextPage)
-   setCurrentPage(resetPagination ? 0 : pageToLoad + 1)
+   const validSongs = processedSongs.filter(
+    (song): song is Song => song !== null
+   )
+   setSongs(validSongs)
   } catch (error) {
-   console.error('Error loading songs:', error)
+   console.error('Error cargando canciones:', error)
   } finally {
    setIsLoading(false)
-   loadingRef.current = false
   }
  }
 
- const loadMoreSongs = useCallback(() => {
-  if (!isLoading && hasNextPage && !loadingRef.current) {
+ const refreshSongs = useCallback(() => {
+  loadSongs()
+ }, [])
+
+ useEffect(() => {
+  if (permission?.granted && songs.length === 0) {
    loadSongs()
   }
- }, [isLoading, hasNextPage])
-
- const refreshSongs = useCallback(() => {
-  if (!loadingRef.current) {
-   loadSongs(true)
-  }
- }, [])
+ }, [permission?.granted])
 
  return {
   songs,
   isLoading,
-  hasNextPage,
-  loadMoreSongs,
   refreshSongs,
   handleRequestPermission,
   hasPermission: permission?.granted ?? false,
