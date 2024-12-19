@@ -8,8 +8,8 @@ import { TextUI } from '@/components/text-ui'
 import { theme } from '@/constanst/theme'
 import { Image } from 'expo-image'
 import { router } from 'expo-router'
-import { Pressable, StyleSheet, Text, View } from 'react-native'
-import { useActiveTrack, useIsPlaying } from 'react-native-track-player'
+import { Pressable, StyleSheet, View } from 'react-native'
+import { useActiveTrack } from 'react-native-track-player'
 
 export default function PlayerScreen() {
  const song = useActiveTrack()
