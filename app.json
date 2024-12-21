@@ -39,7 +39,8 @@
           "backgroundColor": "#0b0b0b"
         }
       ],
-      "expo-media-library"
+      "expo-media-library",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true
